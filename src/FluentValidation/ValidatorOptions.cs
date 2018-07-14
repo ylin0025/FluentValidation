@@ -24,63 +24,12 @@ namespace FluentValidation {
 	using Resources;
 	using Validators;
 
-	/// <summary>
-	/// Validator runtime options
-	/// </summary>
-	public static class ValidatorOptions {
-		/// <summary>
-		/// Default cascade mode
-		/// </summary>
-		public static CascadeMode CascadeMode = CascadeMode.Continue;
-
-		/// <summary>
-		/// Default property chain separator
-		/// </summary>
-		public static string PropertyChainSeparator = ".";
-
-		/// <summary>
-		/// Default language manager 
-		/// </summary>
-		public static ILanguageManager LanguageManager {
-			get => _languageManager;
-			set => _languageManager = value ?? throw new ArgumentNullException(nameof(value));
-		}
-
-		/// <summary>
-		/// Customizations of validator selector
-		/// </summary>
-		public static ValidatorSelectorOptions ValidatorSelectors { get; } = new ValidatorSelectorOptions();
-
-		private static Func<Type, MemberInfo, LambdaExpression, string> _propertyNameResolver = DefaultPropertyNameResolver;
-		private static Func<Type, MemberInfo, LambdaExpression, string> _displayNameResolver = DefaultDisplayNameResolver;
-		private static ILanguageManager _languageManager = new LanguageManager();
-		private static Func<MessageFormatter> _messageFormatterFactory = () => new MessageFormatter();
-		private static Func<PropertyValidator, string> _errorCodeResolver = DefaultErrorCodeResolver;
-
-		/// <summary>
-		/// Specifies a factory for creating MessageFormatter instances.
-		/// </summary>
-		public static Func<MessageFormatter> MessageFormatterFactory {
-			get => _messageFormatterFactory;
-			set => _messageFormatterFactory = value ?? (() => new MessageFormatter());
-		}
-
-		/// <summary>
-		/// Pluggable logic for resolving property names
-		/// </summary>
-		public static Func<Type, MemberInfo, LambdaExpression, string> PropertyNameResolver {
-			get => _propertyNameResolver;
-			set => _propertyNameResolver = value ?? DefaultPropertyNameResolver;
-		}
-
-		/// <summary>
-		/// Pluggable logic for resolving display names
-		/// </summary>
-		public static Func<Type, MemberInfo, LambdaExpression, string> DisplayNameResolver
-		{
-			get => _displayNameResolver;
-			set => _displayNameResolver = value ?? DefaultDisplayNameResolver;
-		}
+	public class ValidatorConfiguration {
+		private ILanguageManager _languageManager = new LanguageManager();
+		private Func<Type, MemberInfo, LambdaExpression, string> _propertyNameResolver = DefaultPropertyNameResolver;
+		private Func<Type, MemberInfo, LambdaExpression, string> _displayNameResolver = DefaultDisplayNameResolver;
+		private Func<MessageFormatter> _messageFormatterFactory = () => new MessageFormatter();
+		private Func<PropertyValidator, string> _errorCodeResolver = DefaultErrorCodeResolver;
 
 		static string DefaultPropertyNameResolver(Type type, MemberInfo memberInfo, LambdaExpression expression) {
 			if (expression != null) {
@@ -95,24 +44,158 @@ namespace FluentValidation {
 			return memberInfo == null ? null : DisplayNameCache.GetCachedDisplayName(memberInfo);
 		}
 
+		static string DefaultErrorCodeResolver(PropertyValidator validator) {
+			return validator.GetType().Name;
+		}
 
+		
+		/// <summary>
+		/// Default cascade mode
+		/// </summary>
+		public CascadeMode CascadeMode { get; set; } = CascadeMode.Continue;
+		
+		/// <summary>
+		/// Default property chain separator
+		/// </summary>
+		public string PropertyChainSeparator { get; set; } = ".";
+		
+		/// <summary>
+		/// Default language manager 
+		/// </summary>
+		public ILanguageManager LanguageManager {
+			get => _languageManager;
+			set => _languageManager = value ?? throw new ArgumentNullException(nameof(value));
+		}
+		
+		/// <summary>
+		/// Customizations of validator selector
+		/// </summary>
+		public ValidatorSelectorOptions ValidatorSelectors { get; } = new ValidatorSelectorOptions();
+	
+		/// <summary>
+		/// Specifies a factory for creating MessageFormatter instances.
+		/// </summary>
+		public Func<MessageFormatter> MessageFormatterFactory {
+			get => _messageFormatterFactory;
+			set => _messageFormatterFactory = value ?? (() => new MessageFormatter());
+		}
+
+		/// <summary>
+		/// Pluggable logic for resolving property names
+		/// </summary>
+		public Func<Type, MemberInfo, LambdaExpression, string> PropertyNameResolver {
+			get => _propertyNameResolver;
+			set => _propertyNameResolver = value ?? DefaultPropertyNameResolver;
+		}
+
+		/// <summary>
+		/// Pluggable logic for resolving display names
+		/// </summary>
+		public Func<Type, MemberInfo, LambdaExpression, string> DisplayNameResolver	{
+			get => _displayNameResolver;
+			set => _displayNameResolver = value ?? DefaultDisplayNameResolver;
+		}
+
+		
+		/// <summary>
+		/// Disables the expression accessor cache. Not recommended.
+		/// </summary>
+		public bool DisableAccessorCache { get; set; }
+
+		/// <summary>
+		/// Pluggable resolver for default error codes
+		/// </summary>
+		public Func<PropertyValidator, string> ErrorCodeResolver {
+			get => _errorCodeResolver;
+			set => _errorCodeResolver = value ?? DefaultErrorCodeResolver;
+		}
+	}
+	
+	/// <summary>
+	/// Validator runtime options
+	/// </summary>
+	public static class ValidatorOptions {
+		private static ValidatorConfiguration _configuration = new ValidatorConfiguration();
+
+		public static ValidatorConfiguration GlobalConfiguration => _configuration;
+
+		/// <summary>
+		/// Default cascade mode
+		/// </summary>
+		[Obsolete("Use ValidatorOptions.GlobalConfiguration.CascadeMode instead")]
+		public static CascadeMode CascadeMode {
+			get => _configuration.CascadeMode;
+			set => _configuration.CascadeMode = value;
+		}
+
+		/// <summary>
+		/// Default property chain separator
+		/// </summary>
+		[Obsolete("Use ValidatorOptions.GlobalConfiguration.PropertyChainSeparator instead")]
+		public static string PropertyChainSeparator {
+			get => _configuration.PropertyChainSeparator;
+			set => _configuration.PropertyChainSeparator = value;
+		}
+
+		/// <summary>
+		/// Default language manager 
+		/// </summary>
+		[Obsolete("Use ValidatorOptions.GlobalConfiguration.LanguageManager instead")]
+		public static ILanguageManager LanguageManager {
+			get => _configuration.LanguageManager;
+			set => _configuration.LanguageManager = value;
+		}
+
+		/// <summary>
+		/// Customizations of validator selector
+		/// </summary>
+		[Obsolete("Use ValidatorOptions.GlobalConfiguration.ValidatorSelectors instead")]
+		public static ValidatorSelectorOptions ValidatorSelectors => _configuration.ValidatorSelectors;
+
+		/// <summary>
+		/// Specifies a factory for creating MessageFormatter instances.
+		/// </summary>
+		[Obsolete("Use ValidatorOptions.GlobalConfiguration.MessageFormatterFactory instead")]
+		public static Func<MessageFormatter> MessageFormatterFactory {
+			get => _configuration.MessageFormatterFactory;
+			set => _configuration.MessageFormatterFactory = value;
+		}
+
+		/// <summary>
+		/// Pluggable logic for resolving property names
+		/// </summary>
+		[Obsolete("Use ValidatorOptions.GlobalConfiguration.PropertyNameResolver instead")]
+		public static Func<Type, MemberInfo, LambdaExpression, string> PropertyNameResolver {
+			get => _configuration.PropertyNameResolver;
+			set => _configuration.PropertyNameResolver = value;
+		}
+
+		/// <summary>
+		/// Pluggable logic for resolving display names
+		/// </summary>
+		[Obsolete("Use ValidatorOptions.GlobalConfiguration.DisplayNameResolver instead")]
+		public static Func<Type, MemberInfo, LambdaExpression, string> DisplayNameResolver {
+			get => _configuration.DisplayNameResolver;
+			set => _configuration.DisplayNameResolver = value;
+		}
 
 
 		/// <summary>
 		/// Disables the expression accessor cache. Not recommended.
 		/// </summary>
-		public static bool DisableAccessorCache { get; set; }
+		[Obsolete("Use ValidatorOptions.GlobalConfiguration.DisableAccessorCache instead")]
+		public static bool DisableAccessorCache {
+			get => _configuration.DisableAccessorCache;
+			set => _configuration.DisableAccessorCache = value;
+		}
 
 		/// <summary>
 		/// Pluggable resolver for default error codes
 		/// </summary>
+		[Obsolete("Use ValidatorOptions.GlobalConfiguration.ErrorCodeResolver instead")]
 		public static Func<PropertyValidator, string> ErrorCodeResolver {
-			get => _errorCodeResolver;
-			set => _errorCodeResolver = value ?? DefaultErrorCodeResolver;
-		}
-
-		static string DefaultErrorCodeResolver(PropertyValidator validator) {
-			return validator.GetType().Name;
+			get => _configuration.ErrorCodeResolver;
+			set => _configuration.ErrorCodeResolver = value;
 		}
 	}
 
